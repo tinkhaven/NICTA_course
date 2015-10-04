@@ -35,8 +35,8 @@ instance Apply Id where
     Id (a -> b)
     -> Id a
     -> Id b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance Id"
+  (<*>) = mapId . runId 
+--    error "todo: Course.Apply (<*>)#instance Id"
 
 -- | Implement @Apply@ instance for @List@.
 --
@@ -47,8 +47,11 @@ instance Apply List where
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  (<*>) lf la =
+    -- The intermediate resule is a list of lists [[...], [...]]: fold and concat to single list
+    (foldRight (++) Nil) $
+    -- Intermediate result: map each function to the input list
+    (map (\f -> map f la)) lf
 
 -- | Implement @Apply@ instance for @Optional@.
 --

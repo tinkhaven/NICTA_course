@@ -116,8 +116,8 @@ sum =
 length ::
   List a
   -> Int
-length =
-  error "todo: Course.List#length"
+length Nil = 0
+length (_ :. xs) = 1 + (length xs)
 
 -- | Map the given function on each element of the list.
 --
@@ -167,8 +167,15 @@ filter =
   List a
   -> List a
   -> List a
-(++) =
-  error "todo: Course.List#(++)"
+(++) a Nil = a
+(++) Nil b = b
+(++) a b =
+  let concatR Nil x2 = x2
+      concatR (x :. xs) x2 = concatR xs (x :. x2)
+      -- don't use reverse here?
+  in  concatR (reverse a) b
+
+--  error "todo: Course.List#(++)"
 
 infixr 5 ++
 
@@ -300,7 +307,8 @@ reverse ::
   List a
   -> List a
 reverse =
-  error "todo: Course.List#reverse"
+  -- foldRight (\x acc -> acc :. x:.Nil) Nil
+  error "todo"
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
