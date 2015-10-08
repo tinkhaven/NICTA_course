@@ -47,7 +47,7 @@ class Apply f => Applicative f where
   -> f a
   -> f b
 (<$>) =
-  error "todo: Course.Applicative#(<$>)"
+  (<*>) . pure
 
 -- | Insert into Id.
 --
@@ -56,8 +56,7 @@ instance Applicative Id where
   pure ::
     a
     -> Id a
-  pure =
-    error "todo: Course.Applicative pure#instance Id"
+  pure = Id
 
 -- | Insert into a List.
 --
@@ -66,8 +65,7 @@ instance Applicative List where
   pure ::
     a
     -> List a
-  pure =
-    error "todo: Course.Applicative pure#instance List"
+  pure x = x :. Nil 
 
 -- | Insert into an Optional.
 --
@@ -76,8 +74,7 @@ instance Applicative Optional where
   pure ::
     a
     -> Optional a
-  pure =
-    error "todo: Course.Applicative pure#instance Optional"
+  pure = Full
 
 -- | Insert into a constant function.
 --
@@ -86,8 +83,7 @@ instance Applicative ((->) t) where
   pure ::
     a
     -> ((->) t a)
-  pure =
-    error "todo: Course.Applicative pure#((->) t)"
+  pure x = \_ -> x 
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -109,9 +105,24 @@ sequence ::
   Applicative f =>
   List (f a)
   -> f (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
-
+sequence Nil = pure Nil
+sequence (x:.xs) = lift2 (:.) x (sequence xs)
+-- this one took a few hours... I still don't fully grasp the solution but I could solve it
+-- almost solely by going after the type.
+-- Of course I knew I had to involve (<$>) and/or (<*>) somehow...
+-- After a lot of staring at the types for <$> and <*> and
+-- looking at the first example I knew that some intermediary stage would be
+-- (Id 7) (Id [8]) => Id [7, 8]
+-- If we forget about Id for a moment we would have:
+-- f :: a -> (List a) -> (List a)
+-- f = (\x y -> x:.y)
+-- Note that f can be rewritten as
+-- (:.) :: a -> List a -> List a
+-- Bringing Id back into the equation that maps perfectly to the type of lift2
+-- lift2 :: (a -> b      -> c)      -> f  a -> f  b        -> f  c
+-- lift2 :: (a -> List a -> List a) -> Id a -> Id (List a) -> Id (List a)
+-- 
+                   
 -- | Replicate an effect a given number of times.
 --
 -- >>> replicateA 4 (Id "hi")
@@ -133,8 +144,10 @@ replicateA ::
   Int
   -> f a
   -> f (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+-- replicateA n x = sequence (take n (repeat x)) or
+-- replicateA n   = sequence . (take n) . repeat or 
+replicateA = (\n -> sequence . (take n) . repeat)
+-- This one is easy right after solving sequence!
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -161,8 +174,33 @@ filtering ::
   (a -> f Bool)
   -> List a
   -> f (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering _ Nil = pure $ Nil
+filtering f (x:.xs) =
+--  (<$>) (\y -> if y then Nil else Nil) (f x)
+--  lift2 (++) ((<$>) (\y -> if y then Nil else Nil) (f x))
+--  (<$>) (++) (((<$>) (\y -> if y then x:.Nil else Nil) (f x)) filtering f xs)
+  (++) <$> ((\y -> if y then (x:.Nil) else Nil) <$> (f x)) <*> (filtering f xs)
+
+-- Took me a while again... I started from the definition of sequence, adopted a bit
+-- lift2 (:.) x (filtering f xs)
+-- of course this doesn't do the filtering magic yet but
+-- f x :: f Bool
+-- so how we deal with this? We want to do something like:
+-- case f x of
+--   True  -> ...
+--   False -> ...
+-- I was on the wrong track. I was looking for application to the List, however
+-- I should have focused on application to the result of (a -> f Bool)
+-- Once I figured that out, I was able to come up with:
+-- (\y -> if y then a else b) <$> (f x)
+-- That was an eye-opener. I assumed the remainer would be trivial but it took me
+-- another while as I was first trying to put the recursion to filtering _inside_
+-- the if/then/else. I presume there must be a way to somehow make that work
+-- but I decided to go down another path:
+-- (++) <$> l1 <*> l2 :: f (List a)
+-- now it was easy
+-- l1 -> either the empty list (if result was false) or the singleton list (if the result was true)
+-- l2 -> the recursion into filtering
 
 -----------------------
 -- SUPPORT LIBRARIES --

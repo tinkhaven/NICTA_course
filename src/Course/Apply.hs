@@ -123,7 +123,6 @@ lift2 ::
   -> f c
 lift2 fab ma mb =
   fab <$> ma <*> mb
---  error "todo: Course.Apply#lift2"
 
 -- | Apply a ternary function in the environment.
 --
@@ -156,7 +155,6 @@ lift3 ::
   -> f d
 lift3 fabc ma mb mc =
   fabc <$> ma <*> mb <*> mc
---  error "todo: Course.Apply#lift2"
 
 -- | Apply a quaternary function in the environment.
 --
