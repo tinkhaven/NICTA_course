@@ -176,8 +176,6 @@ filter f (x:.xs)
       concatR (x :. xs) x2 = concatR xs (x :. x2)
   in  concatR (reverse a) b
 
---  error "todo: Course.List#(++)"
-
 infixr 5 ++
 
 -- | Flatten a list of lists to a list.
@@ -193,8 +191,9 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten =
-  error "todo: Course.List#flatten"
+flatten doubleList =
+  foldRight flattenList Nil doubleList
+  where flattenList singleList accum = foldRight (:.) accum singleList
 
 -- | Map a function then flatten to a list.
 --
@@ -210,8 +209,7 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo: Course.List#flatMap"
+flatMap f list = flatten $ map f list
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -220,8 +218,8 @@ flatMap =
 flattenAgain ::
   List (List a)
   -> List a
-flattenAgain =
-  error "todo: Course.List#flattenAgain"
+flattenAgain doubleList =
+  flatMap id doubleList
 
 -- | Convert a list of optional values to an optional list of values.
 --

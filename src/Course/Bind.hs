@@ -68,8 +68,8 @@ infixr 1 =<<
   f (a -> b)
   -> f a
   -> f b
-(<*>) =
-  error "todo: Course.Bind#(<*>)"
+(<*>) f x =
+  (=<<) (\f' -> (<$>) f' x) f
 
 infixl 4 <*>
 
@@ -82,8 +82,7 @@ instance Bind Id where
     (a -> Id b)
     -> Id a
     -> Id b
-  (=<<) =
-    error "todo: Course.Bind (=<<)#instance Id"
+  (=<<) f = f . runId
 
 -- | Binds a function on a List.
 --
@@ -94,8 +93,23 @@ instance Bind List where
     (a -> List b)
     -> List a
     -> List b
-  (=<<) =
-    error "todo: Course.Bind (=<<)#instance List"
+  (=<<) f xs =
+    flatten $ map f xs
+-- strange that flatten . map doesn't work...
+{--
+    Couldn't match type ‘List a0’ with ‘List a -> List b’
+    Expected type: List (List a0) -> List a -> List b
+      Actual type: List (List a0) -> List a0
+...
+    Couldn't match type ‘List a -> List (List b)’ with ‘List (List a0)’
+    Expected type: (a -> List b) -> List (List a0)
+      Actual type: (a -> List b) -> List a -> List (List b)
+    Relevant bindings include
+      (=<<) :: (a -> List b) -> List a -> List b
+        (bound at src/Course/Bind.hs:97:3)
+...
+    Probable cause: ‘map’ is applied to too few arguments
+ --}
 
 -- | Binds a function on an Optional.
 --
@@ -106,8 +120,7 @@ instance Bind Optional where
     (a -> Optional b)
     -> Optional a
     -> Optional b
-  (=<<) =
-    error "todo: Course.Bind (=<<)#instance Optional"
+  (=<<) = bindOptional
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -118,8 +131,7 @@ instance Bind ((->) t) where
     (a -> ((->) t b))
     -> ((->) t a)
     -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Bind (=<<)#instance ((->) t)"
+  (=<<) ff fa = (\x -> ff (fa x) x)
 
 -- | Flattens a combined structure to a single structure.
 --
@@ -139,7 +151,7 @@ join ::
   f (f a)
   -> f a
 join =
-  error "todo: Course.Bind#join"
+  (=<<) id
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
