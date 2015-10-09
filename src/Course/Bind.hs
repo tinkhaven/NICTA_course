@@ -180,8 +180,9 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Bind#(<=<)"
+(<=<) f g x =
+  f =<< (g x)
+-- Why does (<=<) f g = f =<< g not work?
 
 infixr 1 <=<
 
