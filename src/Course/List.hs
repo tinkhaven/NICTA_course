@@ -90,8 +90,7 @@ product ::
   List Int
   -> Int
 product =
-  error "todo: Course.List#product"
-
+  (foldRight (*) 1)
 -- | Sum the elements of the list.
 --
 -- >>> sum (1 :. 2 :. 3 :. Nil)
@@ -105,8 +104,7 @@ sum ::
   List Int
   -> Int
 sum =
-  error "todo: Course.List#sum"
-
+  (foldRight (+) 0)
 -- | Return the length of the list.
 --
 -- >>> length (1 :. 2 :. 3 :. Nil)
@@ -148,7 +146,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter f Nil = Nil
+filter _ Nil = Nil
 filter f (x:.xs)
   | f x       = x:.(filter f xs)
   | otherwise = filter f xs
@@ -246,9 +244,18 @@ flattenAgain doubleList =
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional =
-  error "todo: Course.List#seqOptional"
-
+seqOptional Nil = Empty
+seqOptional listOfOptionals =
+  let
+    seqOptional' Nil = Nil
+    seqOptional' (x:.xs) =
+        case x of
+          Full v -> v:.seqOptional' xs
+          Empty -> Nil
+    listToOptional Nil = Empty
+    listToOptional r   = Full r
+  in  listToOptional (seqOptional' listOfOptionals)
+      
 -- | Find the first element in the list matching the predicate.
 --
 -- >>> find even (1 :. 3 :. 5 :. Nil)
@@ -269,8 +276,9 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo: Course.List#find"
+find _ Nil = Empty
+find f (x:.xs) =
+  if f x then Full x else find f xs
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -321,8 +329,8 @@ produce ::
   -> a
   -> List a
 produce =
-  error "todo: Course.List#produce"
-
+  (:.) . produce
+  
 -- | Do anything other than reverse a list.
 -- Is it even possible?
 --
